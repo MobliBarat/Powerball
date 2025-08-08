@@ -13,8 +13,6 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel für JSX-Transformation im Browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Da Lucide React Icons ohne Build-Prozess schwer direkt über CDN einzubinden sind,
-         verwenden wir hier einfache Text-Platzhalter für die Icons. -->
 </head>
 <body class="font-inter">
     <div id="root"></div>
@@ -36,6 +34,11 @@
             const [selectedWhiteBalls, setSelectedWhiteBalls] = React.useState([]);
             // Zustand für den vom Benutzer ausgewählten Powerball (höchstens 1)
             const [selectedPowerball, setSelectedPowerball] = React.useState(null);
+
+            // ZUSTÄNDE FÜR SOZIALE MEDIEN UND TEILNAHMECODE
+            const [socialMediaPlatform, setSocialMediaPlatform] = React.useState('');
+            const [accountName, setAccountName] = React.useState('');
+            const [participationCode, setParticipationCode] = React.useState(''); // NEU: Teilnahmecode
 
             // Zustand für Fehlermeldungen bei der Validierung
             const [errors, setErrors] = React.useState({});
@@ -88,11 +91,14 @@
             };
 
             /**
-             * Sendet die ausgewählten Zahlen an den Server mit exponentiellem Backoff bei Fehlern.
+             * Sendet die ausgewählten Zahlen und Metadaten an den Server mit exponentiellem Backoff bei Fehlern.
              * @param {Array<number>} whiteBalls - Die ausgewählten weißen Kugeln.
              * @param {number} powerball - Der ausgewählte Powerball.
+             * @param {string} socialMediaPlatform - Die soziale Medienplattform.
+             * @param {string} accountName - Der soziale Medien Accountname.
+             * @param {string} participationCode - Der Teilnahmecode.
              */
-            const sendNumbersToServer = async (whiteBalls, powerball) => {
+            const sendNumbersToServer = async (whiteBalls, powerball, socialMediaPlatform, accountName, participationCode) => {
                 setIsLoading(true);
                 setServerMessage('Sende Zahlen an den Server...');
 
@@ -106,7 +112,10 @@
                         // Das Format der Nachricht, wie vom C#-Code erwartet (ein JSON-String innerhalb des "message"-Feldes)
                         const messageContent = JSON.stringify({
                             whiteBalls: whiteBalls,
-                            powerball: powerball
+                            powerball: powerball,
+                            socialMediaPlatform: socialMediaPlatform,
+                            accountName: accountName,
+                            participationCode: participationCode // NEU: Teilnahmecode im Payload
                         });
 
                         // Das vollständige Payload, das an den Server gesendet wird
@@ -184,16 +193,36 @@
                     isValid = false;
                 }
 
+                // Validierung für Social Media Daten
+                if (!socialMediaPlatform.trim()) {
+                    newErrors.socialMediaPlatform = 'Bitte geben Sie eine Social Media Plattform ein.';
+                    isValid = false;
+                }
+                if (!accountName.trim()) {
+                    newErrors.accountName = 'Bitte geben Sie Ihren Accountnamen ein.';
+                    isValid = false;
+                }
+
+                // NEU: Validierung für Teilnahmecode
+                if (!participationCode.trim()) {
+                    newErrors.participationCode = 'Bitte geben Sie einen Teilnahmecode ein.';
+                    isValid = false;
+                }
+
                 setErrors(newErrors);
 
                 if (isValid) {
                     setDisplayedWhiteBalls([...finalWhiteBalls].sort((a, b) => a - b));
                     setDisplayedPowerball(finalPowerball);
-                    // Zahlen an den Server senden
-                    sendNumbersToServer(finalWhiteBalls, finalPowerball);
+                    // Zahlen und zusätzliche Informationen an den Server senden (Teilnahmecode hinzugefügt)
+                    sendNumbersToServer(finalWhiteBalls, finalPowerball, socialMediaPlatform, accountName, participationCode);
                     // Optional: Auswahlfelder zurücksetzen, nachdem sie bestätigt wurden
                     setSelectedWhiteBalls([]);
                     setSelectedPowerball(null);
+                    // Eingabefelder für Social Media und Teilnahmecode zurücksetzen
+                    setSocialMediaPlatform('');
+                    setAccountName('');
+                    setParticipationCode(''); // NEU: Teilnahmecode zurücksetzen
                 } else {
                     setDisplayedWhiteBalls([]);
                     setDisplayedPowerball(null);
@@ -246,11 +275,51 @@
                             <div className="absolute inset-0 bg-paper-texture opacity-20 pointer-events-none"></div>
                             <div className="relative z-10">
                                 <div className="flex flex-col sm:flex-row justify-between items-center mb-4 pb-3 sm:pb-4 border-b-2 border-dashed border-gray-400">
-                                    <span className="text-sm sm:text-md font-bold text-gray-700 uppercase tracking-wide mb-2 sm:mb-0">Offizieller Spielschein</span>
-                                    <span className="text-sm sm:text-md font-bold text-gray-700 uppercase tracking-wide">POWERBALL</span>
+                                    {/* SOCIAL MEDIA PLATTFORM UND ACCOUNT */}
+                                    <div class="flex-1 min-w-0 mr-0 sm:mr-4 mb-2 sm:mb-0"> {/* Flex-1 für gleiche Breite */}
+                                        <label htmlFor="socialPlatform" class="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide text-left mb-1">Plattform:</label>
+                                        <input
+                                            id="socialPlatform"
+                                            type="text"
+                                            value={socialMediaPlatform}
+                                            onChange={(e) => setSocialMediaPlatform(e.target.value)}
+                                            placeholder="z.B. Twitter"
+                                            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 mb-1"
+                                        />
+                                        {errors.socialMediaPlatform && (
+                                            <p className="text-red-600 text-xs text-left mt-1">{errors.socialMediaPlatform}</p>
+                                        )}
+                                        <label htmlFor="accountName" class="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide text-left mb-1 mt-2">Accountname:</label>
+                                        <input
+                                            id="accountName"
+                                            type="text"
+                                            value={accountName}
+                                            onChange={(e) => setAccountName(e.target.value)}
+                                            placeholder="z.B. @IhrName"
+                                            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                                        />
+                                        {errors.accountName && (
+                                            <p className="text-red-600 text-xs text-left mt-1">{errors.accountName}</p>
+                                        )}
+                                    </div>
+                                    {/* NEU: TEILNAHMECODE */}
+                                    <div class="flex-1 min-w-0"> {/* Flex-1 für gleiche Breite */}
+                                        <label htmlFor="participationCode" class="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide text-left mb-1">Teilnahmecode:</label>
+                                        <input
+                                            id="participationCode"
+                                            type="text"
+                                            value={participationCode}
+                                            onChange={(e) => setParticipationCode(e.target.value)}
+                                            placeholder="Ihr Code"
+                                            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+                                        />
+                                        {errors.participationCode && (
+                                            <p className="text-red-600 text-xs text-left mt-1">{errors.participationCode}</p>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 sm:mb-5">Wählen Sie 5 Zahlen von 1-69</h2>
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 sm:mb-5 mt-8">Wählen Sie 5 Zahlen von 1-69</h2>
                                 <div className="p-3 sm:p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-5 sm:mb-7">
                                     {renderNumberGrid(1, 35, selectedWhiteBalls, handleWhiteBallSelection)}
                                     <div className="mt-3 sm:mt-4"></div>
@@ -316,6 +385,14 @@
                                     <p className="text-xl sm:text-2xl font-semibold text-gray-800 mt-5 sm:mt-6 flex items-center justify-center gap-2 sm:gap-3">
                                         <CheckCircle className="text-green-600" size={24} /> Ihre finalen Zahlen! Viel Glück! {/* Kleinere Icon-Größe für mobile */}
                                     </p>
+                                    <p className="text-md sm:text-lg text-gray-700 mt-2">
+                                        Eingereicht auf <span className="font-bold">{socialMediaPlatform || 'N/A'}</span> (<span className="font-bold">{accountName || 'N/A'}</span>)
+                                    </p>
+                                    {participationCode && (
+                                        <p className="text-md sm:text-lg text-gray-700 mt-1">
+                                            Teilnahmecode: <span className="font-bold">{participationCode}</span>
+                                        </p>
+                                    )}
                                 </>
                             ) : (
                                 <div className="text-gray-600 text-base sm:text-xl py-6 sm:py-8">
