@@ -13,32 +13,18 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel für JSX-Transformation im Browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide React Icons CDN (für Icons wie Sparkles, CheckCircle, XCircle) -->
-    <!-- Stellen Sie sicher, dass Lucide Icons korrekt als globale Variable verfügbar sind oder importiert werden -->
-    <!-- Dies ist ein Workaround für die Verwendung von React-Komponenten aus Lucide React ohne Build-Prozess.
-         Normalerweise importiert man diese in einem Build-Setup.
-         Wir laden hier die "preact" Version, die oft kleiner ist und direkt über CDN geladen werden kann.
-         Allerdings ist die Nutzung von `lucide-react` direkt ohne Build-Tool komplexer.
-         Ich füge eine vereinfachte Version hinzu, die nur SVG-Icons einfügt. -->
+    <!-- Da Lucide React Icons ohne Build-Prozess schwer direkt über CDN einzubinden sind,
+         verwenden wir hier einfache Text-Platzhalter für die Icons. -->
 </head>
 <body class="font-inter">
     <div id="root"></div>
 
     <script type="text/babel">
-        // Importe für Lucide React sind hier nicht direkt über CDN möglich, ohne Build-Tool.
-        // Daher emulieren wir die Icons durch inline SVGs oder Emojis, falls keine direkte Alternative verfügbar ist.
-        // Für diesen Zweck verwende ich Fallback-Emojis oder einfache Textdarstellungen,
-        // da die direkte Einbindung von Lucide React ohne Bundler komplex ist.
-        const Sparkles = ({ size, className }) => (
-            <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✨</span>
-        );
-        const CheckCircle = ({ size, className }) => (
-            <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✅</span>
-        );
-        const XCircle = ({ size, className }) => (
-            <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>❌</span>
-        );
-        // CloudUpload wird nicht mehr benötigt, da keine Server-Uploads mehr stattfinden.
+        // Einfache Platzhalter für Icons, da Lucide React ohne Build-Tool komplex ist
+        const Sparkles = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✨</span>;
+        const CheckCircle = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✅</span>;
+        const XCircle = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>❌</span>;
+        const CloudUpload = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>☁️⬆️</span>; // Neues Icon für Upload
 
         function App() {
             // Zustand für die angezeigten weißen Kugeln (vom Benutzer ausgewählt)
@@ -53,6 +39,15 @@
 
             // Zustand für Fehlermeldungen bei der Validierung
             const [errors, setErrors] = React.useState({});
+            // Zustand für Server-Nachrichten (z.B. "Senden...", "Erfolgreich gesendet!")
+            const [serverMessage, setServerMessage] = React.useState('');
+            // Zustand für den Ladezustand beim Senden an den Server
+            const [isLoading, setIsLoading] = React.useState(false);
+
+            // Die URL Ihres Node.js-Servers
+            const serverURL = "https://mein-gewinnspiel-server.onrender.com/message";
+
+            console.log("Verwendete Server-URL:", serverURL);
 
             /**
              * Behandelt das Klicken auf eine Zahl im weißen Kugeln-Bereich.
@@ -93,7 +88,74 @@
             };
 
             /**
+             * Sendet die ausgewählten Zahlen an den Server mit exponentiellem Backoff bei Fehlern.
+             * @param {Array<number>} whiteBalls - Die ausgewählten weißen Kugeln.
+             * @param {number} powerball - Der ausgewählte Powerball.
+             */
+            const sendNumbersToServer = async (whiteBalls, powerball) => {
+                setIsLoading(true);
+                setServerMessage('Sende Zahlen an den Server...');
+
+                const maxRetries = 3; // Maximale Anzahl von Wiederholungsversuchen
+                let currentRetry = 0;
+                let success = false;
+                let lastError = null;
+
+                while (currentRetry <= maxRetries && !success) {
+                    try {
+                        // Das Format der Nachricht, wie vom C#-Code erwartet (ein JSON-String innerhalb des "message"-Feldes)
+                        const messageContent = JSON.stringify({
+                            whiteBalls: whiteBalls,
+                            powerball: powerball
+                        });
+
+                        // Das vollständige Payload, das an den Server gesendet wird
+                        const payload = {
+                            message: messageContent
+                        };
+
+                        const response = await fetch(serverURL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(payload),
+                            mode: 'cors', // Explizites Setzen von 'cors'
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.text();
+                            throw new Error(`Serverfehler: ${response.status} ${response.statusText} - ${errorData}`);
+                        }
+
+                        const responseData = await response.json();
+                        setServerMessage('Zahlen erfolgreich gesendet! Serverantwort: ' + JSON.stringify(responseData));
+                        console.log('Serverantwort:', responseData);
+                        success = true; // Erfolg, Schleife beenden
+                    } catch (error) {
+                        lastError = error;
+                        console.error(`Fehler beim Senden (Versuch ${currentRetry + 1}):`, error);
+                        if (currentRetry < maxRetries) {
+                            const delay = Math.pow(2, currentRetry) * 1000; // 1s, 2s, 4s Verzögerung
+                            setServerMessage(`Fehler beim Senden. Versuche es erneut in ${delay / 1000}s...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        }
+                        currentRetry++;
+                    }
+                }
+
+                if (!success) {
+                    setServerMessage('Fehler beim Senden der Zahlen nach mehreren Versuchen: ' + lastError.message);
+                }
+
+                setIsLoading(false);
+                // Nachricht nach einiger Zeit ausblenden
+                setTimeout(() => setServerMessage(''), 5000);
+            };
+
+            /**
              * Validiert die vom Benutzer ausgewählten Zahlen und zeigt sie an, wenn sie gültig sind.
+             * Bei erfolgreicher Validierung werden die Zahlen auch an den Server gesendet.
              */
             const confirmMySelection = () => {
                 const newErrors = {};
@@ -127,12 +189,15 @@
                 if (isValid) {
                     setDisplayedWhiteBalls([...finalWhiteBalls].sort((a, b) => a - b));
                     setDisplayedPowerball(finalPowerball);
-                    // Server-Logik wurde entfernt
+                    // Zahlen an den Server senden
+                    sendNumbersToServer(finalWhiteBalls, finalPowerball);
+                    // Optional: Auswahlfelder zurücksetzen, nachdem sie bestätigt wurden
                     setSelectedWhiteBalls([]);
                     setSelectedPowerball(null);
                 } else {
                     setDisplayedWhiteBalls([]);
                     setDisplayedPowerball(null);
+                    setServerMessage(''); // Server-Nachricht zurücksetzen, wenn Validierung fehlschlägt
                 }
             };
 
@@ -152,6 +217,7 @@
                                   }
                                   focus:outline-none focus:ring-2 focus:ring-offset-2 ${isPowerball ? 'focus:ring-red-500' : 'focus:ring-blue-500'}
                                 `}
+                                disabled={isLoading} // Deaktiviert Buttons während des Ladens
                             >
                                 {num}
                             </button>
@@ -207,8 +273,15 @@
                                     <button
                                         onClick={confirmMySelection}
                                         className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-4 px-10 rounded-full shadow-lg-purple hover:from-purple-700 hover:to-indigo-800 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-400 focus:ring-opacity-75 text-xl flex items-center justify-center gap-2"
+                                        disabled={isLoading} // Deaktiviert den Button während des Ladens
                                     >
-                                        Schein bestätigen
+                                        {isLoading ? (
+                                            <>
+                                                <CloudUpload className="animate-bounce" size={24} /> Senden...
+                                            </>
+                                        ) : (
+                                            'Schein bestätigen'
+                                        )}
                                     </button>
                                 </div>
                             </div>
@@ -244,6 +317,16 @@
                             ) : (
                                 <div className="text-gray-600 text-xl py-8">
                                     Wählen Sie Ihre Zahlen auf dem Powerball-Schein, um zu beginnen!
+                                </div>
+                            )}
+
+                            {/* Server-Nachricht anzeigen */}
+                            {serverMessage && (
+                                <div className={`mt-6 p-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-2 ${
+                                    serverMessage.startsWith('Fehler') ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-green-100 text-green-700 border border-green-300'
+                                }`}>
+                                    {serverMessage.startsWith('Fehler') ? <XCircle size={20} /> : <CheckCircle size={20} />}
+                                    {serverMessage}
                                 </div>
                             )}
                         </div>
@@ -303,6 +386,20 @@
                         }
                         .animate-fade-in {
                             animation: fade-in 0.5s ease-out forwards;
+                        }
+
+                        @keyframes bounce {
+                            0%, 100% {
+                                transform: translateY(-25%);
+                                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+                            }
+                            50% {
+                                transform: none;
+                                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+                            }
+                        }
+                        .animate-bounce {
+                            animation: bounce 1s infinite;
                         }
                     `}</style>
                 </div>
