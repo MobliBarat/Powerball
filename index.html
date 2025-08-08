@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Powerball Lottery Schein</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- React und ReactDOM CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel für JSX-Transformation im Browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide React Icons CDN (für Icons wie Sparkles, CheckCircle, XCircle) -->
+    <!-- Stellen Sie sicher, dass Lucide Icons korrekt als globale Variable verfügbar sind oder importiert werden -->
+    <!-- Dies ist ein Workaround für die Verwendung von React-Komponenten aus Lucide React ohne Build-Prozess.
+         Normalerweise importiert man diese in einem Build-Setup.
+         Wir laden hier die "preact" Version, die oft kleiner ist und direkt über CDN geladen werden kann.
+         Allerdings ist die Nutzung von `lucide-react` direkt ohne Build-Tool komplexer.
+         Ich füge eine vereinfachte Version hinzu, die nur SVG-Icons einfügt. -->
+</head>
+<body class="font-inter">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Importe für Lucide React sind hier nicht direkt über CDN möglich, ohne Build-Tool.
+        // Daher emulieren wir die Icons durch inline SVGs oder Emojis, falls keine direkte Alternative verfügbar ist.
+        // Für diesen Zweck verwende ich Fallback-Emojis oder einfache Textdarstellungen,
+        // da die direkte Einbindung von Lucide React ohne Bundler komplex ist.
+        const Sparkles = ({ size, className }) => (
+            <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✨</span>
+        );
+        const CheckCircle = ({ size, className }) => (
+            <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✅</span>
+        );
+        const XCircle = ({ size, className }) => (
+            <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>❌</span>
+        );
+        // CloudUpload wird nicht mehr benötigt, da keine Server-Uploads mehr stattfinden.
+
+        function App() {
+            // Zustand für die angezeigten weißen Kugeln (vom Benutzer ausgewählt)
+            const [displayedWhiteBalls, setDisplayedWhiteBalls] = React.useState([]);
+            // Zustand für den angezeigten Powerball
+            const [displayedPowerball, setDisplayedPowerball] = React.useState(null);
+
+            // Zustand für die vom Benutzer ausgewählten weißen Kugeln (bis zu 5 Stück)
+            const [selectedWhiteBalls, setSelectedWhiteBalls] = React.useState([]);
+            // Zustand für den vom Benutzer ausgewählten Powerball (höchstens 1)
+            const [selectedPowerball, setSelectedPowerball] = React.useState(null);
+
+            // Zustand für Fehlermeldungen bei der Validierung
+            const [errors, setErrors] = React.useState({});
+
+            /**
+             * Behandelt das Klicken auf eine Zahl im weißen Kugeln-Bereich.
+             * Fügt die Zahl der Auswahl hinzu oder entfernt sie.
+             * Es können maximal 5 Zahlen ausgewählt werden.
+             * @param {number} num - Die angeklickte Zahl.
+             */
+            const handleWhiteBallSelection = (num) => {
+                const newSelection = [...selectedWhiteBalls];
+                const index = newSelection.indexOf(num);
+
+                if (index > -1) {
+                    newSelection.splice(index, 1);
+                } else {
+                    if (newSelection.length < 5) {
+                        newSelection.push(num);
+                    } else {
+                        setErrors(prevErrors => ({ ...prevErrors, whiteBalls: 'Sie können maximal 5 weiße Kugeln auswählen.' }));
+                        return;
+                    }
+                }
+                if (errors.whiteBalls) {
+                    setErrors(prevErrors => ({ ...prevErrors, whiteBalls: '' }));
+                }
+                setSelectedWhiteBalls(newSelection.sort((a, b) => a - b));
+            };
+
+            /**
+             * Behandelt das Klicken auf eine Zahl im Powerball-Bereich.
+             * Wählt die Zahl aus oder hebt die Auswahl auf. Es kann nur ein Powerball ausgewählt werden.
+             * @param {number} num - Die angeklickte Zahl.
+             */
+            const handlePowerballSelection = (num) => {
+                setSelectedPowerball(selectedPowerball === num ? null : num);
+                if (errors.powerball) {
+                    setErrors(prevErrors => ({ ...prevErrors, powerball: '' }));
+                }
+            };
+
+            /**
+             * Validiert die vom Benutzer ausgewählten Zahlen und zeigt sie an, wenn sie gültig sind.
+             */
+            const confirmMySelection = () => {
+                const newErrors = {};
+                let isValid = true;
+
+                const finalWhiteBalls = selectedWhiteBalls.filter(num => num !== null);
+
+                if (finalWhiteBalls.length !== 5) {
+                    newErrors.whiteBalls = 'Bitte wählen Sie genau 5 weiße Kugeln.';
+                    isValid = false;
+                } else {
+                    const uniqueWhiteBalls = new Set(finalWhiteBalls);
+                    if (uniqueWhiteBalls.size !== 5) {
+                        newErrors.whiteBalls = 'Weiße Kugeln müssen einzigartig sein.';
+                        isValid = false;
+                    }
+                    if (finalWhiteBalls.some(num => num < 1 || num > 69)) {
+                        newErrors.whiteBalls = 'Weiße Kugeln müssen zwischen 1 und 69 liegen.';
+                        isValid = false;
+                    }
+                }
+
+                const finalPowerball = selectedPowerball;
+                if (finalPowerball === null || finalPowerball < 1 || finalPowerball > 26) {
+                    newErrors.powerball = 'Bitte wählen Sie einen Powerball zwischen 1 und 26.';
+                    isValid = false;
+                }
+
+                setErrors(newErrors);
+
+                if (isValid) {
+                    setDisplayedWhiteBalls([...finalWhiteBalls].sort((a, b) => a - b));
+                    setDisplayedPowerball(finalPowerball);
+                    // Server-Logik wurde entfernt
+                    setSelectedWhiteBalls([]);
+                    setSelectedPowerball(null);
+                } else {
+                    setDisplayedWhiteBalls([]);
+                    setDisplayedPowerball(null);
+                }
+            };
+
+            // Hilfsfunktion zur Erstellung der Zahlengitter
+            const renderNumberGrid = (start, end, currentSelection, handleSelection, isPowerball = false) => {
+                const numbers = Array.from({ length: end - start + 1 }, (_, i) => i + start);
+                return (
+                    <div className={`grid ${isPowerball ? 'grid-cols-6' : 'grid-cols-7'} gap-2`}>
+                        {numbers.map(num => (
+                            <button
+                                key={num}
+                                onClick={() => handleSelection(num)}
+                                className={`w-9 h-9 flex items-center justify-center text-base font-semibold rounded-full border-2 transition-all duration-200 ease-in-out
+                                  ${(isPowerball && currentSelection === num) || (!isPowerball && currentSelection.includes(num))
+                                    ? (isPowerball ? 'bg-red-600 text-white border-red-800 shadow-lg scale-105' : 'bg-blue-600 text-white border-blue-800 shadow-lg scale-105')
+                                    : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100 hover:shadow-md'
+                                  }
+                                  focus:outline-none focus:ring-2 focus:ring-offset-2 ${isPowerball ? 'focus:ring-red-500' : 'focus:ring-blue-500'}
+                                `}
+                            >
+                                {num}
+                            </button>
+                        ))}
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 to-purple-950 p-6 font-inter">
+                    <div className="bg-white p-8 rounded-3xl shadow-deep max-w-2xl w-full text-center transform transition-all duration-500 ease-out scale-95 hover:scale-100">
+                        <h1 className="text-5xl font-extrabold text-gray-900 mb-6 flex items-center justify-center gap-4 animate-fade-in-down">
+                            <Sparkles className="text-purple-700 animate-pulse-slow" size={48} />
+                            Powerball-Lotterie
+                        </h1>
+
+                        <p className="text-xl text-gray-700 mb-8 max-w-lg mx-auto leading-relaxed">
+                            Wählen Sie Ihre Glückszahlen auf dem Schein und bestätigen Sie Ihre Auswahl.
+                        </p>
+
+                        {/* Lotto Schein Bereich */}
+                        <div className="mb-10 p-8 bg-gradient-to-br from-lime-50 to-emerald-100 border-4 border-dashed border-lime-300 rounded-2xl shadow-inset-dark ticket-paper relative overflow-hidden">
+                            <div className="absolute inset-0 bg-paper-texture opacity-20 pointer-events-none"></div>
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-dashed border-gray-400">
+                                    <span className="text-md font-bold text-gray-700 uppercase tracking-wide">Offizieller Spielschein</span>
+                                    <span className="text-md font-bold text-gray-700 uppercase tracking-wide">POWERBALL</span>
+                                </div>
+
+                                <h2 className="text-3xl font-extrabold text-gray-800 mb-5">Wählen Sie 5 Zahlen von 1-69</h2>
+                                <div className="p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-7">
+                                    {renderNumberGrid(1, 35, selectedWhiteBalls, handleWhiteBallSelection)}
+                                    <div className="mt-4"></div>
+                                    {renderNumberGrid(36, 69, selectedWhiteBalls, handleWhiteBallSelection)}
+                                </div>
+                                {errors.whiteBalls && (
+                                    <p className="text-red-600 text-base mb-5 flex items-center justify-center gap-2 font-medium animate-fade-in">
+                                        <XCircle size={20} className="text-red-500" /> {errors.whiteBalls}
+                                    </p>
+                                )}
+
+                                <h2 className="text-3xl font-extrabold text-gray-800 mb-5 mt-10">Wählen Sie 1 Powerball von 1-26</h2>
+                                <div className="p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-7">
+                                    {renderNumberGrid(1, 26, selectedPowerball, handlePowerballSelection, true)}
+                                </div>
+                                {errors.powerball && (
+                                    <p className="text-red-600 text-base mt-3 flex items-center justify-center gap-2 font-medium animate-fade-in">
+                                        <XCircle size={20} className="text-red-500" /> {errors.powerball}
+                                    </p>
+                                )}
+
+                                <div className="flex justify-center mt-8">
+                                    <button
+                                        onClick={confirmMySelection}
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-4 px-10 rounded-full shadow-lg-purple hover:from-purple-700 hover:to-indigo-800 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-400 focus:ring-opacity-75 text-xl flex items-center justify-center gap-2"
+                                    >
+                                        Schein bestätigen
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Anzeigebereich der Zahlen */}
+                        <div className="mb-10 p-7 bg-blue-50 rounded-xl shadow-lg border border-blue-100">
+                            <h2 className="text-3xl font-bold text-gray-800 mb-6">Ihre Powerball-Auswahl</h2>
+                            {displayedWhiteBalls.length > 0 ? (
+                                <>
+                                    <div className="flex justify-center gap-5 mb-7">
+                                        {displayedWhiteBalls.map((number, index) => (
+                                            <div
+                                                key={`display-white-${index}`}
+                                                className="w-20 h-20 bg-blue-700 text-white font-extrabold text-4xl rounded-full flex items-center justify-center shadow-ball transform transition-all duration-300 hover:scale-110 border-4 border-blue-900 ring-4 ring-blue-300"
+                                            >
+                                                {number}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex justify-center items-center">
+                                        <div
+                                            key="display-powerball"
+                                            className="w-24 h-24 bg-red-700 text-white font-extrabold text-5xl rounded-full flex items-center justify-center shadow-ball border-4 border-red-900 ring-4 ring-red-300 animate-pulse-slow"
+                                        >
+                                            {displayedPowerball}
+                                        </div>
+                                    </div>
+                                    <p className="text-2xl font-semibold text-gray-800 mt-6 flex items-center justify-center gap-3">
+                                        <CheckCircle className="text-green-600" size={32} /> Ihre finalen Zahlen! Viel Glück!
+                                    </p>
+                                </>
+                            ) : (
+                                <div className="text-gray-600 text-xl py-8">
+                                    Wählen Sie Ihre Zahlen auf dem Powerball-Schein, um zu beginnen!
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Tailwind CSS Custom Styles for Shadows and Animations */}
+                    <style>{`
+                        .shadow-deep {
+                            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+                        }
+                        .shadow-inset-dark {
+                            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+                        }
+                        .shadow-lg-purple {
+                            box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.5), 0 4px 6px -2px rgba(124, 58, 237, 0.25);
+                        }
+                        .shadow-ball {
+                            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4), 0 5px 15px -5px rgba(0, 0, 0, 0.3);
+                        }
+
+                        .ticket-paper {
+                            background-image: radial-gradient(circle at top left, rgba(255,255,255,0.1) 0%, transparent 70%);
+                            border-radius: 1.5rem; /* rounded-2xl */
+                        }
+
+                        @keyframes pulse-slow {
+                            0%, 100% {
+                                transform: scale(1);
+                                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+                            }
+                            50% {
+                                transform: scale(1.05);
+                                box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+                            }
+                        }
+                        .animate-pulse-slow {
+                            animation: pulse-slow 2.5s infinite ease-in-out;
+                        }
+
+                        @keyframes fade-in-down {
+                            0% {
+                                opacity: 0;
+                                transform: translateY(-20px);
+                            }
+                            100% {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+                        .animate-fade-in-down {
+                            animation: fade-in-down 1s ease-out forwards;
+                        }
+
+                        @keyframes fade-in {
+                            0% { opacity: 0; }
+                            100% { opacity: 1; }
+                        }
+                        .animate-fade-in {
+                            animation: fade-in 0.5s ease-out forwards;
+                        }
+                    `}</style>
+                </div>
+            );
+        }
+
+        // Render the App component
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
