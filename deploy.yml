@@ -1,0 +1,45 @@
+# Name des Workflows, der in GitHub Actions angezeigt wird
+name: Deploy Powerball App to GitHub Pages
+
+# Definiert, wann dieser Workflow ausgeführt werden soll
+on:
+  push:
+    branches:
+      - main # Der Workflow wird ausgelöst, wenn Code in den 'main'-Branch gepusht wird
+
+# Definiert die Jobs, die in diesem Workflow ausgeführt werden
+jobs:
+  deploy:
+    # WICHTIG: Sagt GitHub, dass dieser Job auf einem selbst gehosteten Runner laufen soll.
+    # Wenn Sie beim Einrichten des Runners benutzerdefinierte Labels vergeben haben, verwenden Sie diese hier.
+    # Andernfalls ist 'self-hosted' der Standard.
+    runs-on: self-hosted
+
+    # Schritte, die in diesem Job ausgeführt werden
+    steps:
+      # 1. Code aus dem Repository auschecken
+      # Dies holt den aktuellen Stand Ihres Repositorys auf den Runner.
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Debugging-Schritt: Zeigt an, welche Dateien sich im Stammverzeichnis des Runners befinden.
+      # Nützlich zur Überprüfung, ob Ihre index.html korrekt ist.
+      - name: Debug - List files in repo root
+        run: ls -la
+
+      # 3. Deployment zu GitHub Pages
+      # Wir verwenden die Aktion 'peaceiris/actions-gh-pages', um die statischen Dateien
+      # auf den 'gh-pages'-Branch zu pushen.
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          # Der GITHUB_TOKEN ist ein geheimer Token, der von GitHub automatisch bereitgestellt wird.
+          # Sie müssen hier nichts ändern oder einen eigenen Token erstellen.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Der Ordner, der auf GitHub Pages veröffentlicht werden soll.
+          # Da Ihre index.html direkt im Stammverzeichnis Ihres Repositorys liegt,
+          # veröffentlichen wir das gesamte Stammverzeichnis ('.').
+          publish_dir: ./
+          # Der Branch, auf den die bereitzustellenden Dateien gepusht werden.
+          # 'gh-pages' ist ein gängiger Branch für GitHub Pages.
+          publish_branch: gh-pages
