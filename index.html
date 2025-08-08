@@ -205,12 +205,14 @@
             const renderNumberGrid = (start, end, currentSelection, handleSelection, isPowerball = false) => {
                 const numbers = Array.from({ length: end - start + 1 }, (_, i) => i + start);
                 return (
-                    <div className={`grid ${isPowerball ? 'grid-cols-6' : 'grid-cols-7'} gap-2`}>
+                    // Anpassung der Spalten für mobile Ansicht
+                    <div className={`grid ${isPowerball ? 'grid-cols-6' : 'grid-cols-7'} gap-1 sm:gap-2`}>
                         {numbers.map(num => (
                             <button
                                 key={num}
                                 onClick={() => handleSelection(num)}
-                                className={`w-9 h-9 flex items-center justify-center text-base font-semibold rounded-full border-2 transition-all duration-200 ease-in-out
+                                // Anpassung der Größe für mobile Ansicht (w-8 h-8 auf kleinen, w-9 h-9 auf größeren Bildschirmen)
+                                className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base font-semibold rounded-full border-2 transition-all duration-200 ease-in-out
                                   ${(isPowerball && currentSelection === num) || (!isPowerball && currentSelection.includes(num))
                                     ? (isPowerball ? 'bg-red-600 text-white border-red-800 shadow-lg scale-105' : 'bg-blue-600 text-white border-blue-800 shadow-lg scale-105')
                                     : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100 hover:shadow-md'
@@ -227,57 +229,58 @@
             };
 
             return (
-                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 to-purple-950 p-6 font-inter">
-                    <div className="bg-white p-8 rounded-3xl shadow-deep max-w-2xl w-full text-center transform transition-all duration-500 ease-out scale-95 hover:scale-100">
-                        <h1 className="text-5xl font-extrabold text-gray-900 mb-6 flex items-center justify-center gap-4 animate-fade-in-down">
-                            <Sparkles className="text-purple-700 animate-pulse-slow" size={48} />
+                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 to-purple-950 p-4 sm:p-6 font-inter">
+                    {/* Max-width auf sm:max-w-xl für mobile Ansicht und max-w-2xl für größere */}
+                    <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-deep max-w-full sm:max-w-xl lg:max-w-2xl w-full text-center transform transition-all duration-500 ease-out scale-95 hover:scale-100">
+                        <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-900 mb-4 sm:mb-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 animate-fade-in-down">
+                            <Sparkles className="text-purple-700 animate-pulse-slow" size={32} /> {/* Kleinere Größe für mobile */}
                             Powerball-Lotterie
                         </h1>
 
-                        <p className="text-xl text-gray-700 mb-8 max-w-lg mx-auto leading-relaxed">
+                        <p className="text-base sm:text-xl text-gray-700 mb-6 sm:mb-8 max-w-lg mx-auto leading-relaxed px-2 sm:px-0">
                             Wählen Sie Ihre Glückszahlen auf dem Schein und bestätigen Sie Ihre Auswahl.
                         </p>
 
                         {/* Lotto Schein Bereich */}
-                        <div className="mb-10 p-8 bg-gradient-to-br from-lime-50 to-emerald-100 border-4 border-dashed border-lime-300 rounded-2xl shadow-inset-dark ticket-paper relative overflow-hidden">
+                        <div className="mb-8 sm:mb-10 p-4 sm:p-8 bg-gradient-to-br from-lime-50 to-emerald-100 border-4 border-dashed border-lime-300 rounded-2xl shadow-inset-dark ticket-paper relative overflow-hidden">
                             <div className="absolute inset-0 bg-paper-texture opacity-20 pointer-events-none"></div>
                             <div className="relative z-10">
-                                <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-dashed border-gray-400">
-                                    <span className="text-md font-bold text-gray-700 uppercase tracking-wide">Offizieller Spielschein</span>
-                                    <span className="text-md font-bold text-gray-700 uppercase tracking-wide">POWERBALL</span>
+                                <div className="flex flex-col sm:flex-row justify-between items-center mb-4 pb-3 sm:pb-4 border-b-2 border-dashed border-gray-400">
+                                    <span className="text-sm sm:text-md font-bold text-gray-700 uppercase tracking-wide mb-2 sm:mb-0">Offizieller Spielschein</span>
+                                    <span className="text-sm sm:text-md font-bold text-gray-700 uppercase tracking-wide">POWERBALL</span>
                                 </div>
 
-                                <h2 className="text-3xl font-extrabold text-gray-800 mb-5">Wählen Sie 5 Zahlen von 1-69</h2>
-                                <div className="p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-7">
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 sm:mb-5">Wählen Sie 5 Zahlen von 1-69</h2>
+                                <div className="p-3 sm:p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-5 sm:mb-7">
                                     {renderNumberGrid(1, 35, selectedWhiteBalls, handleWhiteBallSelection)}
-                                    <div className="mt-4"></div>
+                                    <div className="mt-3 sm:mt-4"></div>
                                     {renderNumberGrid(36, 69, selectedWhiteBalls, handleWhiteBallSelection)}
                                 </div>
                                 {errors.whiteBalls && (
-                                    <p className="text-red-600 text-base mb-5 flex items-center justify-center gap-2 font-medium animate-fade-in">
-                                        <XCircle size={20} className="text-red-500" /> {errors.whiteBalls}
+                                    <p className="text-red-600 text-sm sm:text-base mb-4 sm:mb-5 flex items-center justify-center gap-1 sm:gap-2 font-medium animate-fade-in px-2 sm:px-0">
+                                        <XCircle size={16} className="text-red-500" /> {errors.whiteBalls}
                                     </p>
                                 )}
 
-                                <h2 className="text-3xl font-extrabold text-gray-800 mb-5 mt-10">Wählen Sie 1 Powerball von 1-26</h2>
-                                <div className="p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-7">
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 sm:mb-5 mt-8 sm:mt-10">Wählen Sie 1 Powerball von 1-26</h2>
+                                <div className="p-3 sm:p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-5 sm:mb-7">
                                     {renderNumberGrid(1, 26, selectedPowerball, handlePowerballSelection, true)}
                                 </div>
                                 {errors.powerball && (
-                                    <p className="text-red-600 text-base mt-3 flex items-center justify-center gap-2 font-medium animate-fade-in">
-                                        <XCircle size={20} className="text-red-500" /> {errors.powerball}
+                                    <p className="text-red-600 text-sm sm:text-base mt-2 sm:mt-3 flex items-center justify-center gap-1 sm:gap-2 font-medium animate-fade-in px-2 sm:px-0">
+                                        <XCircle size={16} className="text-red-500" /> {errors.powerball}
                                     </p>
                                 )}
 
-                                <div className="flex justify-center mt-8">
+                                <div className="flex justify-center mt-6 sm:mt-8">
                                     <button
                                         onClick={confirmMySelection}
-                                        className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-4 px-10 rounded-full shadow-lg-purple hover:from-purple-700 hover:to-indigo-800 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-400 focus:ring-opacity-75 text-xl flex items-center justify-center gap-2"
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 px-6 sm:py-4 sm:px-10 rounded-full shadow-lg-purple hover:from-purple-700 hover:to-indigo-800 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-400 focus:ring-opacity-75 text-lg sm:text-xl flex items-center justify-center gap-2"
                                         disabled={isLoading} // Deaktiviert den Button während des Ladens
                                     >
                                         {isLoading ? (
                                             <>
-                                                <CloudUpload className="animate-bounce" size={24} /> Senden...
+                                                <CloudUpload className="animate-bounce" size={20} /> Senden... {/* Kleinere Icon-Größe für mobile */}
                                             </>
                                         ) : (
                                             'Schein bestätigen'
@@ -288,15 +291,15 @@
                         </div>
 
                         {/* Anzeigebereich der Zahlen */}
-                        <div className="mb-10 p-7 bg-blue-50 rounded-xl shadow-lg border border-blue-100">
-                            <h2 className="text-3xl font-bold text-gray-800 mb-6">Ihre Powerball-Auswahl</h2>
+                        <div className="mb-8 sm:mb-10 p-5 sm:p-7 bg-blue-50 rounded-xl shadow-lg border border-blue-100">
+                            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">Ihre Powerball-Auswahl</h2>
                             {displayedWhiteBalls.length > 0 ? (
                                 <>
-                                    <div className="flex justify-center gap-5 mb-7">
+                                    <div className="flex justify-center gap-3 sm:gap-5 mb-5 sm:mb-7 flex-wrap"> {/* Flex-wrap für Zeilenumbruch auf kleinen Screens */}
                                         {displayedWhiteBalls.map((number, index) => (
                                             <div
                                                 key={`display-white-${index}`}
-                                                className="w-20 h-20 bg-blue-700 text-white font-extrabold text-4xl rounded-full flex items-center justify-center shadow-ball transform transition-all duration-300 hover:scale-110 border-4 border-blue-900 ring-4 ring-blue-300"
+                                                className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-700 text-white font-extrabold text-3xl sm:text-4xl rounded-full flex items-center justify-center shadow-ball transform transition-all duration-300 hover:scale-110 border-4 border-blue-900 ring-4 ring-blue-300"
                                             >
                                                 {number}
                                             </div>
@@ -305,27 +308,27 @@
                                     <div className="flex justify-center items-center">
                                         <div
                                             key="display-powerball"
-                                            className="w-24 h-24 bg-red-700 text-white font-extrabold text-5xl rounded-full flex items-center justify-center shadow-ball border-4 border-red-900 ring-4 ring-red-300 animate-pulse-slow"
+                                            className="w-20 h-20 sm:w-24 sm:h-24 bg-red-700 text-white font-extrabold text-4xl sm:text-5xl rounded-full flex items-center justify-center shadow-ball border-4 border-red-900 ring-4 ring-red-300 animate-pulse-slow"
                                         >
                                             {displayedPowerball}
                                         </div>
                                     </div>
-                                    <p className="text-2xl font-semibold text-gray-800 mt-6 flex items-center justify-center gap-3">
-                                        <CheckCircle className="text-green-600" size={32} /> Ihre finalen Zahlen! Viel Glück!
+                                    <p className="text-xl sm:text-2xl font-semibold text-gray-800 mt-5 sm:mt-6 flex items-center justify-center gap-2 sm:gap-3">
+                                        <CheckCircle className="text-green-600" size={24} /> Ihre finalen Zahlen! Viel Glück! {/* Kleinere Icon-Größe für mobile */}
                                     </p>
                                 </>
                             ) : (
-                                <div className="text-gray-600 text-xl py-8">
+                                <div className="text-gray-600 text-base sm:text-xl py-6 sm:py-8">
                                     Wählen Sie Ihre Zahlen auf dem Powerball-Schein, um zu beginnen!
                                 </div>
                             )}
 
                             {/* Server-Nachricht anzeigen */}
                             {serverMessage && (
-                                <div className={`mt-6 p-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-2 ${
+                                <div className={`mt-5 sm:mt-6 p-3 sm:p-4 rounded-lg text-base sm:text-lg font-semibold flex items-center justify-center gap-1 sm:gap-2 ${
                                     serverMessage.startsWith('Fehler') ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-green-100 text-green-700 border border-green-300'
                                 }`}>
-                                    {serverMessage.startsWith('Fehler') ? <XCircle size={20} /> : <CheckCircle size={20} />}
+                                    {serverMessage.startsWith('Fehler') ? <XCircle size={16} /> : <CheckCircle size={16} />} {/* Kleinere Icon-Größe für mobile */}
                                     {serverMessage}
                                 </div>
                             )}
