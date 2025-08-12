@@ -1,369 +1,391 @@
-import React from 'react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Entry App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- React and ReactDOM CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX transformation in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="font-inter">
+    <div id="root"></div>
 
-// Simple placeholders for icons
-const Sparkles = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✨</span>;
-const CheckCircle = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✅</span>;
-const XCircle = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>❌</span>;
-const CloudUpload = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>☁️⬆️</span>;
+    <script type="text/babel">
+        // Simple placeholders for icons
+        const Sparkles = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✨</span>;
+        const CheckCircle = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>✅</span>;
+        const XCircle = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>❌</span>;
+        const CloudUpload = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>☁️⬆️</span>;
 
-function App() {
-    // State for the displayed 8-digit number
-    const [displayedEightDigitNumber, setDisplayedEightDigitNumber] = React.useState('');
+        function App() {
+            // State for the displayed 8-digit number
+            const [displayedEightDigitNumber, setDisplayedEightDigitNumber] = React.useState('');
 
-    // State for the 8-digit number entered by the user
-    const [eightDigitNumber, setEightDigitNumber] = React.useState('');
+            // State for the 8-digit number entered by the user
+            const [eightDigitNumber, setEightDigitNumber] = React.useState('');
 
-    // STATES FOR SOCIAL MEDIA AND PARTICIPATION CODE
-    const [socialMediaPlatform, setSocialMediaPlatform] = React.useState('');
-    const [accountName, setAccountName] = React.useState('');
-    const [participationCode, setParticipationCode] = React.useState('');
+            // STATES FOR SOCIAL MEDIA AND PARTICIPATION CODE
+            const [socialMediaPlatform, setSocialMediaPlatform] = React.useState('');
+            const [accountName, setAccountName] = React.useState('');
+            const [participationCode, setParticipationCode] = React.useState('');
 
-    // State for validation error messages
-    const [errors, setErrors] = React.useState({});
-    // State for server messages (e.g., "Sending...", "Sent successfully!")
-    const [serverMessage, setServerMessage] = React.useState('');
-    // State for loading status when sending to server
-    const [isLoading, setIsLoading] = React.useState(false);
+            // State for validation error messages
+            const [errors, setErrors] = React.useState({});
+            // State for server messages (e.g., "Sending...", "Sent successfully!")
+            const [serverMessage, setServerMessage] = React.useState('');
+            // State for loading status when sending to server
+            const [isLoading, setIsLoading] = React.useState(false);
 
-    // The URL of your Node.js server
-    const serverURL = "https://mein-gewinnspiel-server.onrender.com/message";
+            // The URL of your Node.js server
+            const serverURL = "https://mein-gewinnspiel-server.onrender.com/message";
 
-    console.log("Using server URL:", serverURL);
+            console.log("Using server URL:", serverURL);
 
-    /**
-     * Handles changes in the 8-digit number input field.
-     * Ensures only numbers are entered and limits the length.
-     * @param {object} e - The event object.
-     */
-    const handleEightDigitNumberChange = (e) => {
-        const value = e.target.value.replace(/\D/g, ''); // Allow only numbers
-        setEightDigitNumber(value.slice(0, 8)); // Limit to 8 characters
-        if (errors.eightDigitNumber) {
-            setErrors(prevErrors => ({ ...prevErrors, eightDigitNumber: '' }));
-        }
-    };
+            /**
+             * Handles changes in the 8-digit number input field.
+             * Ensures only numbers are entered and limits the length.
+             * @param {object} e - The event object.
+             */
+            const handleEightDigitNumberChange = (e) => {
+                const value = e.target.value.replace(/\D/g, ''); // Allow only numbers
+                setEightDigitNumber(value.slice(0, 8)); // Limit to 8 characters
+                if (errors.eightDigitNumber) {
+                    setErrors(prevErrors => ({ ...prevErrors, eightDigitNumber: '' }));
+                }
+            };
 
-    /**
-     * Sends the selected number and metadata to the server with exponential backoff on errors.
-     * @param {string} number - The entered 8-digit number.
-     * @param {string} socialMediaPlatform - The social media platform.
-     * @param {string} accountName - The social media account name.
-     * @param {string} participationCode - The participation code.
-     */
-    const sendNumbersToServer = async (number, socialMediaPlatform, accountName, participationCode) => {
-        setIsLoading(true);
-        setServerMessage('Sending data to server...');
+            /**
+             * Sends the selected number and metadata to the server with exponential backoff on errors.
+             * @param {string} number - The entered 8-digit number.
+             * @param {string} socialMediaPlatform - The social media platform.
+             * @param {string} accountName - The social media account name.
+             * @param {string} participationCode - The participation code.
+             */
+            const sendNumbersToServer = async (number, socialMediaPlatform, accountName, participationCode) => {
+                setIsLoading(true);
+                setServerMessage('Sending data to server...');
 
-        const maxRetries = 3;
-        let currentRetry = 0;
-        let success = false;
-        let lastError = null;
+                const maxRetries = 3;
+                let currentRetry = 0;
+                let success = false;
+                let lastError = null;
 
-        while (currentRetry <= maxRetries && !success) {
-            try {
-                const messageContent = JSON.stringify({
-                    eightDigitNumber: number,
-                    socialMediaPlatform: socialMediaPlatform,
-                    accountName: accountName,
-                    participationCode: participationCode
-                });
+                while (currentRetry <= maxRetries && !success) {
+                    try {
+                        const messageContent = JSON.stringify({
+                            eightDigitNumber: number,
+                            socialMediaPlatform: socialMediaPlatform,
+                            accountName: accountName,
+                            participationCode: participationCode
+                        });
 
-                const payload = {
-                    message: messageContent
-                };
+                        const payload = {
+                            message: messageContent
+                        };
 
-                const response = await fetch(serverURL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                    mode: 'cors',
-                });
+                        const response = await fetch(serverURL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(payload),
+                            mode: 'cors',
+                        });
 
-                if (!response.ok) {
-                    const errorData = await response.text();
-                    throw new Error(`Server error: ${response.status} ${response.statusText} - ${errorData}`);
+                        if (!response.ok) {
+                            const errorData = await response.text();
+                            throw new Error(`Server error: ${response.status} ${response.statusText} - ${errorData}`);
+                        }
+
+                        const responseData = await response.json();
+                        setServerMessage('Data sent successfully! Server response: ' + JSON.stringify(responseData));
+                        console.log('Server response:', responseData);
+                        success = true;
+                    } catch (error) {
+                        lastError = error;
+                        console.error(`Error sending (Attempt ${currentRetry + 1}):`, error);
+                        if (currentRetry < maxRetries) {
+                            const delay = Math.pow(2, currentRetry) * 1000;
+                            setServerMessage(`Error sending. Retrying in ${delay / 1000}s...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        }
+                        currentRetry++;
+                    }
                 }
 
-                const responseData = await response.json();
-                setServerMessage('Data sent successfully! Server response: ' + JSON.stringify(responseData));
-                console.log('Server response:', responseData);
-                success = true;
-            } catch (error) {
-                lastError = error;
-                console.error(`Error sending (Attempt ${currentRetry + 1}):`, error);
-                if (currentRetry < maxRetries) {
-                    const delay = Math.pow(2, currentRetry) * 1000;
-                    setServerMessage(`Error sending. Retrying in ${delay / 1000}s...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
+                if (!success) {
+                    setServerMessage('Failed to send data after multiple attempts: ' + lastError.message);
                 }
-                currentRetry++;
-            }
-        }
 
-        if (!success) {
-            setServerMessage('Failed to send data after multiple attempts: ' + lastError.message);
-        }
+                setIsLoading(false);
+                setTimeout(() => setServerMessage(''), 5000);
+            };
 
-        setIsLoading(false);
-        setTimeout(() => setServerMessage(''), 5000);
-    };
+            /**
+             * Validates the number and metadata entered by the user.
+             * If validation is successful, the data is sent to the server.
+             */
+            const confirmMySelection = () => {
+                const newErrors = {};
+                let isValid = true;
 
-    /**
-     * Validates the number and metadata entered by the user.
-     * If validation is successful, the data is sent to the server.
-     */
-    const confirmMySelection = () => {
-        const newErrors = {};
-        let isValid = true;
+                if (eightDigitNumber.length !== 8 || !/^\d{8}$/.test(eightDigitNumber)) {
+                    newErrors.eightDigitNumber = 'Please enter a valid 8-digit number.';
+                    isValid = false;
+                }
 
-        if (eightDigitNumber.length !== 8 || !/^\d{8}$/.test(eightDigitNumber)) {
-            newErrors.eightDigitNumber = 'Please enter a valid 8-digit number.';
-            isValid = false;
-        }
+                if (!socialMediaPlatform.trim()) {
+                    newErrors.socialMediaPlatform = 'Please enter a social media platform.';
+                    isValid = false;
+                }
+                if (!accountName.trim()) {
+                    newErrors.accountName = 'Please enter your account name.';
+                    isValid = false;
+                }
 
-        if (!socialMediaPlatform.trim()) {
-            newErrors.socialMediaPlatform = 'Please enter a social media platform.';
-            isValid = false;
-        }
-        if (!accountName.trim()) {
-            newErrors.accountName = 'Please enter your account name.';
-            isValid = false;
-        }
+                if (!participationCode.trim()) {
+                    newErrors.participationCode = 'Please enter a participation code.';
+                    isValid = false;
+                }
 
-        if (!participationCode.trim()) {
-            newErrors.participationCode = 'Please enter a participation code.';
-            isValid = false;
-        }
+                setErrors(newErrors);
 
-        setErrors(newErrors);
+                if (isValid) {
+                    setDisplayedEightDigitNumber(eightDigitNumber);
+                    sendNumbersToServer(eightDigitNumber, socialMediaPlatform, accountName, participationCode);
+                    setEightDigitNumber('');
+                    setSocialMediaPlatform('');
+                    setAccountName('');
+                    setParticipationCode('');
+                } else {
+                    setDisplayedEightDigitNumber('');
+                    setServerMessage('');
+                }
+            };
 
-        if (isValid) {
-            setDisplayedEightDigitNumber(eightDigitNumber);
-            sendNumbersToServer(eightDigitNumber, socialMediaPlatform, accountName, participationCode);
-            setEightDigitNumber('');
-            setSocialMediaPlatform('');
-            setAccountName('');
-            setParticipationCode('');
-        } else {
-            setDisplayedEightDigitNumber('');
-            setServerMessage('');
-        }
-    };
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 to-purple-950 p-4 sm:p-6 font-inter">
+                    <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-deep max-w-full sm:max-w-xl lg:max-w-2xl w-full text-center transform transition-all duration-500 ease-out scale-95 hover:scale-100">
+                        <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-900 mb-4 sm:mb-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 animate-fade-in-down">
+                            <Sparkles className="text-purple-700 animate-pulse-slow" size={32} />
+                            Your Lucky Number
+                        </h1>
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 to-purple-950 p-4 sm:p-6 font-inter">
-            <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-deep max-w-full sm:max-w-xl lg:max-w-2xl w-full text-center transform transition-all duration-500 ease-out scale-95 hover:scale-100">
-                <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-900 mb-4 sm:mb-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 animate-fade-in-down">
-                    <Sparkles className="text-purple-700 animate-pulse-slow" size={32} />
-                    Your Lucky Number
-                </h1>
+                        <p className="text-base sm:text-xl text-gray-700 mb-6 sm:mb-8 max-w-lg mx-auto leading-relaxed px-2 sm:px-0">
+                            Enter your 8-digit number and confirm your details.
+                        </p>
 
-                <p className="text-base sm:text-xl text-gray-700 mb-6 sm:mb-8 max-w-lg mx-auto leading-relaxed px-2 sm:px-0">
-                    Enter your 8-digit number and confirm your details.
-                </p>
+                        <div className="mb-8 sm:mb-10 p-4 sm:p-8 bg-gradient-to-br from-lime-50 to-emerald-100 border-4 border-dashed border-lime-300 rounded-2xl shadow-inset-dark ticket-paper relative overflow-hidden">
+                            <div className="absolute inset-0 bg-paper-texture opacity-20 pointer-events-none"></div>
+                            <div className="relative z-10">
+                                <div className="flex flex-col sm:flex-row justify-between items-center mb-4 pb-3 sm:pb-4 border-b-2 border-dashed border-gray-400">
+                                    {/* SOCIAL MEDIA PLATFORM AND ACCOUNT */}
+                                    <div className="flex-1 min-w-0 mr-0 sm:mr-4 mb-2 sm:mb-0">
+                                        <label htmlFor="socialPlatform" className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide text-left mb-1">Platform:</label>
+                                        <input
+                                            id="socialPlatform"
+                                            type="text"
+                                            value={socialMediaPlatform}
+                                            onChange={(e) => setSocialMediaPlatform(e.target.value)}
+                                            placeholder="e.g., Twitter"
+                                            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 mb-1"
+                                        />
+                                        {errors.socialMediaPlatform && (
+                                            <p className="text-red-600 text-xs text-left mt-1">{errors.socialMediaPlatform}</p>
+                                        )}
+                                        <label htmlFor="accountName" className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide text-left mb-1 mt-2">Account Name:</label>
+                                        <input
+                                            id="accountName"
+                                            type="text"
+                                            value={accountName}
+                                            onChange={(e) => setAccountName(e.target.value)}
+                                            placeholder="e.g., @YourName"
+                                            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                                        />
+                                        {errors.accountName && (
+                                            <p className="text-red-600 text-xs text-left mt-1">{errors.accountName}</p>
+                                        )}
+                                    </div>
+                                    {/* PARTICIPATION CODE */}
+                                    <div className="flex-1 min-w-0">
+                                        <label htmlFor="participationCode" className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide text-left mb-1">Participation Code:</label>
+                                        <input
+                                            id="participationCode"
+                                            type="text"
+                                            value={participationCode}
+                                            onChange={(e) => setParticipationCode(e.target.value)}
+                                            placeholder="Your Code"
+                                            maxLength={8}
+                                            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+                                        />
+                                        {errors.participationCode && (
+                                            <p className="text-red-600 text-xs text-left mt-1">{errors.participationCode}</p>
+                                        )}
+                                    </div>
+                                </div>
 
-                <div className="mb-8 sm:mb-10 p-4 sm:p-8 bg-gradient-to-br from-lime-50 to-emerald-100 border-4 border-dashed border-lime-300 rounded-2xl shadow-inset-dark ticket-paper relative overflow-hidden">
-                    <div className="absolute inset-0 bg-paper-texture opacity-20 pointer-events-none"></div>
-                    <div className="relative z-10">
-                        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 pb-3 sm:pb-4 border-b-2 border-dashed border-gray-400">
-                            {/* SOCIAL MEDIA PLATFORM AND ACCOUNT */}
-                            <div className="flex-1 min-w-0 mr-0 sm:mr-4 mb-2 sm:mb-0">
-                                <label htmlFor="socialPlatform" className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide text-left mb-1">Platform:</label>
-                                <input
-                                    id="socialPlatform"
-                                    type="text"
-                                    value={socialMediaPlatform}
-                                    onChange={(e) => setSocialMediaPlatform(e.target.value)}
-                                    placeholder="e.g., Twitter"
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 mb-1"
-                                />
-                                {errors.socialMediaPlatform && (
-                                    <p className="text-red-600 text-xs text-left mt-1">{errors.socialMediaPlatform}</p>
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 sm:mb-5 mt-8">Enter your 8-digit number</h2>
+                                <div className="p-3 sm:p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-5 sm:mb-7">
+                                    <input
+                                        type="text"
+                                        value={eightDigitNumber}
+                                        onChange={handleEightDigitNumberChange}
+                                        placeholder="Enter 8 digits"
+                                        className="w-full p-4 text-center text-2xl sm:text-4xl font-extrabold rounded-md border-2 border-gray-300 focus:outline-none focus:ring-4 focus:ring-purple-500 transition-all duration-200 ease-in-out text-gray-800"
+                                        maxLength={8}
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                                {errors.eightDigitNumber && (
+                                    <p className="text-red-600 text-sm sm:text-base mb-4 sm:mb-5 flex items-center justify-center gap-1 sm:gap-2 font-medium animate-fade-in px-2 sm:px-0">
+                                        <XCircle size={16} className="text-red-500" /> {errors.eightDigitNumber}
+                                    </p>
                                 )}
-                                <label htmlFor="accountName" className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide text-left mb-1 mt-2">Account Name:</label>
-                                <input
-                                    id="accountName"
-                                    type="text"
-                                    value={accountName}
-                                    onChange={(e) => setAccountName(e.target.value)}
-                                    placeholder="e.g., @YourName"
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
-                                />
-                                {errors.accountName && (
-                                    <p className="text-red-600 text-xs text-left mt-1">{errors.accountName}</p>
-                                )}
-                            </div>
-                            {/* PARTICIPATION CODE */}
-                            <div className="flex-1 min-w-0">
-                                <label htmlFor="participationCode" className="block text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide text-left mb-1">Participation Code:</label>
-                                <input
-                                    id="participationCode"
-                                    type="text"
-                                    value={participationCode}
-                                    onChange={(e) => setParticipationCode(e.target.value)}
-                                    placeholder="Your Code"
-                                    maxLength={8}
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-                                />
-                                {errors.participationCode && (
-                                    <p className="text-red-600 text-xs text-left mt-1">{errors.participationCode}</p>
-                                )}
-                            </div>
-                        </div>
 
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 sm:mb-5 mt-8">Enter your 8-digit number</h2>
-                        <div className="p-3 sm:p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-5 sm:mb-7">
-                            <input
-                                type="text"
-                                value={eightDigitNumber}
-                                onChange={handleEightDigitNumberChange}
-                                placeholder="Enter 8 digits"
-                                className="w-full p-4 text-center text-2xl sm:text-4xl font-extrabold rounded-md border-2 border-gray-300 focus:outline-none focus:ring-4 focus:ring-purple-500 transition-all duration-200 ease-in-out text-gray-800"
-                                maxLength={8}
-                                disabled={isLoading}
-                            />
-                        </div>
-                        {errors.eightDigitNumber && (
-                            <p className="text-red-600 text-sm sm:text-base mb-4 sm:mb-5 flex items-center justify-center gap-1 sm:gap-2 font-medium animate-fade-in px-2 sm:px-0">
-                                <XCircle size={16} className="text-red-500" /> {errors.eightDigitNumber}
-                            </p>
-                        )}
-
-                        <div className="flex justify-center mt-6 sm:mt-8">
-                            <button
-                                onClick={confirmMySelection}
-                                className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 px-6 sm:py-4 sm:px-10 rounded-full shadow-lg-purple hover:from-purple-700 hover:to-indigo-800 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-400 focus:ring-opacity-75 text-lg sm:text-xl flex items-center justify-center gap-2"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <CloudUpload className="animate-bounce" size={20} /> Sending...
-                                    </>
-                                ) : (
-                                    'Confirm Number'
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Display area for the number */}
-                <div className="mb-8 sm:mb-10 p-5 sm:p-7 bg-blue-50 rounded-xl shadow-lg border border-blue-100">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">Your Lucky Number</h2>
-                    {displayedEightDigitNumber ? (
-                        <>
-                            <div className="flex justify-center items-center mb-5 sm:mb-7">
-                                <div
-                                    key="display-number"
-                                    className="bg-blue-700 text-white font-extrabold text-4xl sm:text-5xl rounded-lg p-4 sm:p-6 shadow-ball transform transition-all duration-300 hover:scale-110 border-4 border-blue-900 ring-4 ring-blue-300"
-                                >
-                                    {displayedEightDigitNumber}
+                                <div className="flex justify-center mt-6 sm:mt-8">
+                                    <button
+                                        onClick={confirmMySelection}
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold py-3 px-6 sm:py-4 sm:px-10 rounded-full shadow-lg-purple hover:from-purple-700 hover:to-indigo-800 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-400 focus:ring-opacity-75 text-lg sm:text-xl flex items-center justify-center gap-2"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? (
+                                            <>
+                                                <CloudUpload className="animate-bounce" size={20} /> Sending...
+                                            </>
+                                        ) : (
+                                            'Confirm Number'
+                                        )}
+                                    </button>
                                 </div>
                             </div>
-                            <p className="text-xl sm:text-2xl font-semibold text-gray-800 mt-5 sm:mt-6 flex items-center justify-center gap-2 sm:gap-3">
-                                <CheckCircle className="text-green-600" size={24} /> Your final number! Good luck!
-                            </p>
-                            <p className="text-md sm:text-lg text-gray-700 mt-2">
-                                Submitted on <span className="font-bold">{socialMediaPlatform || 'N/A'}</span> (<span className="font-bold">{accountName || 'N/A'}</span>)
-                            </p>
-                            {participationCode && (
-                                <p className="text-md sm:text-lg text-gray-700 mt-1">
-                                    Participation Code: <span className="font-bold">{participationCode}</span>
-                                </p>
+                        </div>
+
+                        {/* Display area for the number */}
+                        <div className="mb-8 sm:mb-10 p-5 sm:p-7 bg-blue-50 rounded-xl shadow-lg border border-blue-100">
+                            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">Your Lucky Number</h2>
+                            {displayedEightDigitNumber ? (
+                                <>
+                                    <div className="flex justify-center items-center mb-5 sm:mb-7">
+                                        <div
+                                            key="display-number"
+                                            className="bg-blue-700 text-white font-extrabold text-4xl sm:text-5xl rounded-lg p-4 sm:p-6 shadow-ball transform transition-all duration-300 hover:scale-110 border-4 border-blue-900 ring-4 ring-blue-300"
+                                        >
+                                            {displayedEightDigitNumber}
+                                        </div>
+                                    </div>
+                                    <p className="text-xl sm:text-2xl font-semibold text-gray-800 mt-5 sm:mt-6 flex items-center justify-center gap-2 sm:gap-3">
+                                        <CheckCircle className="text-green-600" size={24} /> Your final number! Good luck!
+                                    </p>
+                                    <p className="text-md sm:text-lg text-gray-700 mt-2">
+                                        Submitted on <span className="font-bold">{socialMediaPlatform || 'N/A'}</span> (<span className="font-bold">{accountName || 'N/A'}</span>)
+                                    </p>
+                                    {participationCode && (
+                                        <p className="text-md sm:text-lg text-gray-700 mt-1">
+                                            Participation Code: <span className="font-bold">{participationCode}</span>
+                                        </p>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="text-gray-600 text-base sm:text-xl py-6 sm:py-8">
+                                    Enter your number to get started!
+                                </div>
                             )}
-                        </>
-                    ) : (
-                        <div className="text-gray-600 text-base sm:text-xl py-6 sm:py-8">
-                            Enter your number to get started!
-                        </div>
-                    )}
 
-                    {/* Display server message */}
-                    {serverMessage && (
-                        <div className={`mt-5 sm:mt-6 p-3 sm:p-4 rounded-lg text-base sm:text-lg font-semibold flex items-center justify-center gap-1 sm:gap-2 ${
-                            serverMessage.startsWith('Error') ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-green-100 text-green-700 border border-green-300'
-                        }`}>
-                            {serverMessage.startsWith('Error') ? <XCircle size={16} /> : <CheckCircle size={16} />}
-                            {serverMessage}
+                            {/* Display server message */}
+                            {serverMessage && (
+                                <div className={`mt-5 sm:mt-6 p-3 sm:p-4 rounded-lg text-base sm:text-lg font-semibold flex items-center justify-center gap-1 sm:gap-2 ${
+                                    serverMessage.startsWith('Error') ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-green-100 text-green-700 border border-green-300'
+                                }`}>
+                                    {serverMessage.startsWith('Error') ? <XCircle size={16} /> : <CheckCircle size={16} />}
+                                    {serverMessage}
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
+
+                    {/* Tailwind CSS Custom Styles for Shadows and Animations */}
+                    <style>{`
+                        .shadow-deep {
+                            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+                        }
+                        .shadow-inset-dark {
+                            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+                        }
+                        .shadow-lg-purple {
+                            box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.5), 0 4px 6px -2px rgba(124, 58, 237, 0.25);
+                        }
+                        .shadow-ball {
+                            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4), 0 5px 15px -5px rgba(0, 0, 0, 0.3);
+                        }
+
+                        .ticket-paper {
+                            background-image: radial-gradient(circle at top left, rgba(255,255,255,0.1) 0%, transparent 70%);
+                            border-radius: 1.5rem; /* rounded-2xl */
+                        }
+
+                        @keyframes pulse-slow {
+                            0%, 100% {
+                                transform: scale(1);
+                                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+                            }
+                            50% {
+                                transform: scale(1.05);
+                                box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+                            }
+                        }
+                        .animate-pulse-slow {
+                            animation: pulse-slow 2.5s infinite ease-in-out;
+                        }
+
+                        @keyframes fade-in-down {
+                            0% {
+                                opacity: 0;
+                                transform: translateY(-20px);
+                            }
+                            100% {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+                        .animate-fade-in-down {
+                            animation: fade-in-down 1s ease-out forwards;
+                        }
+
+                        @keyframes fade-in {
+                            0% { opacity: 0; }
+                            100% { opacity: 1; }
+                        }
+                        .animate-fade-in {
+                            animation: fade-in 0.5s ease-out forwards;
+                        }
+
+                        @keyframes bounce {
+                            0%, 100% {
+                                transform: translateY(-25%);
+                                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+                            }
+                            50% {
+                                transform: none;
+                                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+                            }
+                        }
+                        .animate-bounce {
+                            animation: bounce 1s infinite;
+                        }
+                    `}</style>
                 </div>
-            </div>
+            );
+        }
 
-            {/* Tailwind CSS Custom Styles for Shadows and Animations */}
-            <style>{`
-                .shadow-deep {
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
-                }
-                .shadow-inset-dark {
-                    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(0, 0, 0, 0.04);
-                }
-                .shadow-lg-purple {
-                    box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.5), 0 4px 6px -2px rgba(124, 58, 237, 0.25);
-                }
-                .shadow-ball {
-                    box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4), 0 5px 15px -5px rgba(0, 0, 0, 0.3);
-                }
-
-                .ticket-paper {
-                    background-image: radial-gradient(circle at top left, rgba(255,255,255,0.1) 0%, transparent 70%);
-                    border-radius: 1.5rem; /* rounded-2xl */
-                }
-
-                @keyframes pulse-slow {
-                    0%, 100% {
-                        transform: scale(1);
-                        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-                    }
-                    50% {
-                        transform: scale(1.05);
-                        box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
-                    }
-                }
-                .animate-pulse-slow {
-                    animation: pulse-slow 2.5s infinite ease-in-out;
-                }
-
-                @keyframes fade-in-down {
-                    0% {
-                        opacity: 0;
-                        transform: translateY(-20px);
-                    }
-                    100% {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                .animate-fade-in-down {
-                    animation: fade-in-down 1s ease-out forwards;
-                }
-
-                @keyframes fade-in {
-                    0% { opacity: 0; }
-                    100% { opacity: 1; }
-                }
-                .animate-fade-in {
-                    animation: fade-in 0.5s ease-out forwards;
-                }
-
-                @keyframes bounce {
-                    0%, 100% {
-                        transform: translateY(-25%);
-                        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-                    }
-                    50% {
-                        transform: none;
-                        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-                    }
-                }
-                .animate-bounce {
-                    animation: bounce 1s infinite;
-                }
-            `}</style>
-        </div>
-    );
-}
-
-export default App;
+        // Render the App component
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
