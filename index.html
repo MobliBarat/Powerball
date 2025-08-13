@@ -25,10 +25,10 @@
         const CloudUpload = ({ size, className }) => <span className={className} style={{ fontSize: size ? `${size / 2}px` : '24px' }}>☁️⬆️</span>;
 
         function App() {
-            // State for the displayed 8-digit number
+            // State for the displayed number
             const [displayedEightDigitNumber, setDisplayedEightDigitNumber] = React.useState('');
 
-            // State for the 8-digit number entered by the user
+            // State for the number entered by the user
             const [eightDigitNumber, setEightDigitNumber] = React.useState('');
 
             // STATES FOR SOCIAL MEDIA AND PARTICIPATION CODE
@@ -49,13 +49,13 @@
             console.log("Using server URL:", serverURL);
 
             /**
-             * Handles changes in the 8-digit number input field.
-             * Ensures only numbers are entered and limits the length.
+             * Handles changes in the number input field.
+             * Ensures only numbers are entered and limits the length to 12.
              * @param {object} e - The event object.
              */
             const handleEightDigitNumberChange = (e) => {
                 const value = e.target.value.replace(/\D/g, ''); // Allow only numbers
-                setEightDigitNumber(value.slice(0, 8)); // Limit to 8 characters
+                setEightDigitNumber(value.slice(0, 12)); // Limit to 12 characters
                 if (errors.eightDigitNumber) {
                     setErrors(prevErrors => ({ ...prevErrors, eightDigitNumber: '' }));
                 }
@@ -63,7 +63,7 @@
 
             /**
              * Sends the selected number and metadata to the server with exponential backoff on errors.
-             * @param {string} number - The entered 8-digit number.
+             * @param {string} number - The entered number.
              * @param {string} socialMediaPlatform - The social media platform.
              * @param {string} accountName - The social media account name.
              * @param {string} participationCode - The participation code.
@@ -136,8 +136,8 @@
                 const newErrors = {};
                 let isValid = true;
 
-                if (eightDigitNumber.length !== 8 || !/^\d{8}$/.test(eightDigitNumber)) {
-                    newErrors.eightDigitNumber = 'Please enter a valid 8-digit number.';
+                if (eightDigitNumber.length !== 12 || !/^\d{12}$/.test(eightDigitNumber)) { // Updated to 12 digits
+                    newErrors.eightDigitNumber = 'Please enter a valid 12-digit number.';
                     isValid = false;
                 }
 
@@ -179,7 +179,7 @@
                         </h1>
 
                         <p className="text-base sm:text-xl text-gray-700 mb-6 sm:mb-8 max-w-lg mx-auto leading-relaxed px-2 sm:px-0">
-                            Enter your 8-digit number and confirm your details.
+                            Enter your 12-digit number and confirm your details.
                         </p>
 
                         <div className="mb-8 sm:mb-10 p-4 sm:p-8 bg-gradient-to-br from-lime-50 to-emerald-100 border-4 border-dashed border-lime-300 rounded-2xl shadow-inset-dark ticket-paper relative overflow-hidden">
@@ -222,7 +222,7 @@
                                             value={participationCode}
                                             onChange={(e) => setParticipationCode(e.target.value)}
                                             placeholder="Your Code"
-                                            maxLength={8}
+                                            // maxLength removed for unlimited length
                                             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
                                         />
                                         {errors.participationCode && (
@@ -231,15 +231,15 @@
                                     </div>
                                 </div>
 
-                                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 sm:mb-5 mt-8">Enter your 8-digit number</h2>
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 sm:mb-5 mt-8">Enter your 12-digit number</h2>
                                 <div className="p-3 sm:p-5 bg-white border-2 border-gray-200 rounded-lg shadow-inner-light mb-5 sm:mb-7">
                                     <input
                                         type="text"
                                         value={eightDigitNumber}
                                         onChange={handleEightDigitNumberChange}
-                                        placeholder="Enter 8 digits"
+                                        placeholder="Enter 12 digits"
                                         className="w-full p-4 text-center text-2xl sm:text-4xl font-extrabold rounded-md border-2 border-gray-300 focus:outline-none focus:ring-4 focus:ring-purple-500 transition-all duration-200 ease-in-out text-gray-800"
-                                        maxLength={8}
+                                        maxLength={12} // Changed to 12
                                         disabled={isLoading}
                                     />
                                 </div>
